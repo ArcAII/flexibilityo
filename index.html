@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Chatbot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-messages"></div>
+    <input type="text" id="user-input" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <style>
+    /* styles.css */
+body {
+    font-family: Arial, sans-serif;
+  }
+  
+  #chat-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  #chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  #chat-messages .user {
+    text-align: right;
+    color: blue;
+  }
+  
+  #chat-messages .model {
+    text-align: left;
+    color: green;
+  }
+  
+  #user-input {
+    width: calc(100% - 90px);
+    padding: 10px;
+  }
+  
+  button {
+    padding: 10px;
+  }
+  
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+  </script>
+  <script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    let model;
+
+    async function fetchApiKey() {
+      const response = await fetch('http://localhost:3000/api-key');
+      const data = await response.json();
+      return data.apiKey;
+    }
+
+    async function initializeModel() {
+      const apiKey = await fetchApiKey();
+      const genAI = new GoogleGenerativeAI(apiKey);
+      model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    }
+
+    initializeModel();
+
+    // Function to send a message to the model and display the response
+    window.sendMessage = async function() {
+      const userInput = document.getElementById("user-input").value;
+      addMessage("user", userInput); // Add user message to chat window
+      const result = await model.generateContent(userInput);
+      const response = await result.response;
+      const text = response.text();
+      addMessage("model", text); // Add model response to chat window
+    }
+
+    // Function to add a message to the chat window
+    function addMessage(role, text) {
+      const chatMessages = document.getElementById("chat-messages");
+      const messageDiv = document.createElement("div");
+      messageDiv.className = role;
+      messageDiv.innerText = text;
+      chatMessages.appendChild(messageDiv);
+    }
+  </script>
+</body>
+</html>
